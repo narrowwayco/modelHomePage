@@ -326,26 +326,47 @@
       return;
     }
 
-    notices.forEach((notice, index) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // 날짜 기준 비교
+
+    notices.filter((notice) => {
+      // 1. endDate 없으면 안 보이게
+      if (!notice.endDate) return false;
+
+      const end = new Date(notice.endDate);
+      end.setHours(23, 59, 59, 999); // 해당 날짜 끝까지 포함
+
+      // 2. endDate가 과거면 안 보이게
+      if (end < today) return false;
+
+      // 3. (선택) startDate가 미래면 아직 안 보이게
+      if (notice.startDate) {
+        const start = new Date(notice.startDate);
+        start.setHours(0, 0, 0, 0);
+        if (start > today) return false;
+      }
+
+      return true;
+    }).forEach((notice, index) => {
       const popup = document.createElement("div");
       popup.className = "popup";
       popup.style.display = "flex"; // 첫 진입 시 보여주기
 
       popup.innerHTML = `
-      <div class="popupBox">
-        <div class="popupContent">
-          <div class="popupItem">
-            <a href="${notice.linkUrl || "#"}" target="_blank" rel="noopener noreferrer">
-              <img src="${notice.images[0]}" alt="공지 이미지">
-            </a>
+        <div class="popupBox">
+          <div class="popupContent">
+            <div class="popupItem">
+              <a href="${notice.linkUrl || "#"}" target="_blank" rel="noopener noreferrer">
+                <img src="${notice.images?.[0] || ""}" alt="공지 이미지">
+              </a>
+            </div>
+          </div>
+          <div class="popupCheck">
+            <input type="checkbox" class="popAgree" data-index="${index}">오늘 하루 그만보기
+            <img src="./img/popupX.svg" alt="닫기" class="popupCloseBtn" data-index="${index}">
           </div>
         </div>
-        <div class="popupCheck">
-          <input type="checkbox" class="popAgree" data-index="${index}">오늘 하루 그만보기
-          <img src="./img/popupX.svg" alt="닫기" class="popupCloseBtn" data-index="${index}">
-        </div>
-      </div>
-    `;
+      `;
 
       popupContainer.appendChild(popup);
     });
