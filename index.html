@@ -317,19 +317,32 @@
     }
   }
 
+  // 팝업 컨테이너 표시 여부 업데이트
   function updatePopupContainerVisibility() {
     const popups = document.querySelectorAll(".popup");
-    const anyVisible = [...popups].some(p => getComputedStyle(p).display !== "none");
-    document.getElementById("popupContainer").style.display = anyVisible ? "block" : "none";
+    const anyVisible = [...popups].some(
+            (p) => getComputedStyle(p).display !== "none"
+    );
+
+    const container = document.getElementById("popupContainer");
+
+    if (anyVisible) {
+      container.classList.add("show");
+    } else {
+      container.classList.remove("show");
+    }
   }
 
-  //공지사항 적용
+  // 공지사항 팝업 초기화
   async function initNoticePage() {
-    const notices = (await fetchNotices()).filter(n => n.images?.[0]).slice(0, 3);
     const popupContainer = document.getElementById("popupContainer");
 
+    const notices = (await fetchNotices())
+            .filter((n) => n.images?.[0])
+            .slice(0, 3);
+
     if (!notices.length) {
-      popupContainer.style.display = "none";
+      popupContainer.classList.remove("show");
       return;
     }
 
@@ -353,19 +366,19 @@
     });
 
     popupContainer.innerHTML = "";
-    popupContainer.style.display = "block";
 
     validNotices.forEach((notice) => {
-      const key = String(notice.contentId); // ✅ 고유키
+      const key = String(notice.contentId);
 
       const popup = document.createElement("div");
       popup.className = "popup";
-      popup.style.display = "flex";
+      popup.dataset.key = key;   // 🔥 이거 추가
 
       popup.innerHTML = `
       <div class="popupBox">
         <div class="popupCheck">
-          <input type="checkbox" class="popAgree" data-key="${key}">오늘 하루 그만보기
+          <input type="checkbox" class="popAgree" data-key="${key}">
+          오늘 하루 그만보기
           <img src="./img/popupX.svg" alt="닫기" class="popupCloseBtn" data-key="${key}">
         </div>
         <div class="popupContent">
@@ -378,7 +391,7 @@
       </div>
     `;
 
-      // ✅ 초기 “하루 안보기” 적용 (생성 시점에 바로 처리)
+      // 오늘 하루 안보기 체크
       const saved = localStorage.getItem(`hidePopupDate_${key}`);
       if (saved === getTodayKey()) {
         popup.style.display = "none";
@@ -387,27 +400,29 @@
       popupContainer.appendChild(popup);
     });
 
-    // ✅ 닫기 이벤트 (현재 타겟 안정)
-    document.querySelectorAll(".popupCloseBtn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const key = e.currentTarget.dataset.key;
-
-        const agreeEl = document.querySelector(`.popAgree[data-key="${key}"]`);
-        const agree = agreeEl ? agreeEl.checked : false;
-
-        if (agree) {
-          localStorage.setItem(`hidePopupDate_${key}`, getTodayKey());
-        }
-
-        const popup = e.currentTarget.closest(".popup");
-        if (popup) popup.style.display = "none";
-
-        updatePopupContainerVisibility();
-      });
-    });
-
     updatePopupContainerVisibility();
   }
+
+  document.getElementById("popupContainer").addEventListener("click", (e) => {
+    if (!e.target.classList.contains("popupCloseBtn")) return;
+
+    const key = e.target.dataset.key;
+
+    // contentId 기반으로 정확히 찾기
+    const popup = document.querySelector(`.popup[data-key="${key}"]`);
+    if (!popup) return;
+
+    const agreeEl = popup.querySelector(".popAgree");
+    const agree = agreeEl ? agreeEl.checked : false;
+
+    if (agree) {
+      localStorage.setItem(`hidePopupDate_${key}`, getTodayKey());
+    }
+
+    popup.style.display = "none";
+
+    updatePopupContainerVisibility();
+  });
 
   // 오늘 날짜 문자열
   function getTodayKey() {

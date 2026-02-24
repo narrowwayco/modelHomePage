@@ -127,57 +127,77 @@ section {width: 100%;}
 
 
 /* 팝업설정 */
+/* =========================
+   팝업 설정 (정리 버전)
+========================= */
+
 #popupContainer {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
     background-color: rgba(0, 0, 0, 0.8);
     z-index: 99999;
 
-    display: flex;
+    display: none;              /* 기본 숨김 */
+    flex-direction: row;        /* 기본 PC 가로 */
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;    /* 🔥 center → flex-start (겹침 방지) */
     gap: 2rem;
-    padding: 2rem;
-    flex-wrap: wrap;
+    padding: 4rem 2rem;
+    overflow-y: auto;
+}
+
+#popupContainer.show {
+    display: flex;
+}
+
+/* 모바일에서 세로 */
+@media (max-width: 800px) {
+    #popupContainer {
+        flex-direction: column;
+        align-items: center;
+    }
 }
 
 .popup {
-    position: static;  /* ✅ fixed 제거 */
+    flex: 0 0 auto;            /* 🔥 flex 수축 방지 */
     display: flex;
     justify-content: center;
     align-items: center;
 }
+
 .popupBox {
-    width: 100%; max-width: 50rem; height: 50rem;
-}
-/*.popupContent {
     width: 100%;
-    height: 100%;
-    background-image: url(../img/popup.svg); !* JS로 삽입해도 OK *!
-    background-size: contain;       !* 👈 비율 유지하며 축소 *!
-    background-repeat: no-repeat;   !* 👈 반복 없음 *!
-    background-position: center;    !* 👈 가운데 정렬 *!
-}*/
-.popupCheck {width: 100%; display: flex; align-items: center; font-size: 1.6rem;}
-.popupCheck input {margin-right: 1rem;}
-.popupCheck img {margin-left: auto;}
+    max-width: 50rem;
+    height: auto;              /* 🔥 고정 height 제거 (겹침 원인) */
+    background: #000;
+    border-radius: 1rem;
+    padding: 1.5rem;
+}
+
+.popupCheck {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+}
+
+.popupCheck input {
+    margin-right: 1rem;
+}
+
+.popupCheck img {
+    margin-left: auto;
+    cursor: pointer;
+}
 
 .popupContent {
     display: flex;
-    gap: 1.5rem;
     justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    padding: 1rem;
 }
 
 .popupItem {
-    flex: 1 1 30%;
-    max-width: 44rem;
-    cursor: pointer;
+    width: 100%;
 }
 
 .popupItem img {
@@ -185,9 +205,7 @@ section {width: 100%;}
     height: auto;
     border-radius: 10px;
     object-fit: contain;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
-
 /* 메인 start ------------------------------------------*/
 header {
     position: fixed;
@@ -553,7 +571,12 @@ header, .sec1WrapBox, .sec1_list, .sec1_img, .footerWrap, .section2, .section3, 
 
     .foot_copy {font-size: 1.4rem;}
 
-
+    #popupContainer {
+        flex-direction: row;      /* 🔥 가로 정렬 */
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;          /* 많으면 줄바꿈 */
+    }
 }
 
 /* ✅ 992px 이하 (태블릿) */
@@ -642,7 +665,7 @@ header, .sec1WrapBox, .sec1_list, .sec1_img, .footerWrap, .section2, .section3, 
 
 
     /* 팝업설정 */
-    .popupBox {width: 100%; max-width: 35rem; height: 37rem;}
+    .popupBox {width: 100%; max-width: 35rem; height: 50rem;}
 
     .main {height: 27vh;}
 
