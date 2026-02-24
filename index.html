@@ -319,18 +319,26 @@
 
   // 팝업 컨테이너 표시 여부 업데이트
   function updatePopupContainerVisibility() {
-    const popups = document.querySelectorAll(".popup");
-    const anyVisible = [...popups].some(
-            (p) => getComputedStyle(p).display !== "none"
-    );
-
     const container = document.getElementById("popupContainer");
 
-    if (anyVisible) {
-      container.classList.add("show");
-    } else {
+    const popups = container.querySelectorAll(".popup");
+
+    if (popups.length === 0) {
       container.classList.remove("show");
+      container.style.display = "none";   // 🔥 강제
+      controlBackgroundAudio(false);
+    } else {
+      container.classList.add("show");
+      container.style.display = "flex";   // 🔥 강제
+      controlBackgroundAudio(true);
     }
+  }
+
+  // 팝업 실행시 음소거처리
+  function controlBackgroundAudio(isPopupOpen) {
+    const video = document.getElementById("bg-video-preload");
+    if (!video) return;
+    video.muted = isPopupOpen; // 🔥 팝업 열리면 mute
   }
 
   // 공지사항 팝업 초기화
@@ -391,38 +399,34 @@
       </div>
     `;
 
+
       // 오늘 하루 안보기 체크
       const saved = localStorage.getItem(`hidePopupDate_${key}`);
       if (saved === getTodayKey()) {
-        popup.style.display = "none";
+        return; // 🔥 아예 생성 안 함
       }
 
       popupContainer.appendChild(popup);
+
+      const closeBtn = popup.querySelector(".popupCloseBtn");
+
+      closeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+
+        const agreeEl = popup.querySelector(".popAgree");
+        const agree = agreeEl ? agreeEl.checked : false;
+
+        if (agree) {
+          localStorage.setItem(`hidePopupDate_${key}`, getTodayKey());
+        }
+
+        popup.remove();
+        updatePopupContainerVisibility();
+      });
     });
 
     updatePopupContainerVisibility();
   }
-
-  document.getElementById("popupContainer").addEventListener("click", (e) => {
-    if (!e.target.classList.contains("popupCloseBtn")) return;
-
-    const key = e.target.dataset.key;
-
-    // contentId 기반으로 정확히 찾기
-    const popup = document.querySelector(`.popup[data-key="${key}"]`);
-    if (!popup) return;
-
-    const agreeEl = popup.querySelector(".popAgree");
-    const agree = agreeEl ? agreeEl.checked : false;
-
-    if (agree) {
-      localStorage.setItem(`hidePopupDate_${key}`, getTodayKey());
-    }
-
-    popup.style.display = "none";
-
-    updatePopupContainerVisibility();
-  });
 
   // 오늘 날짜 문자열
   function getTodayKey() {
